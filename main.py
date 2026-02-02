@@ -5,6 +5,7 @@ from style_and_javascript.style import hide_st_style, message_style, input_style
 from config.set_llm import llm
 from config.set_firebase import firebase_project_settings
 from talk_bot import ChatBot
+import time
 import datetime
 
 #スタイリング
@@ -45,6 +46,10 @@ if "time" not in st.session_state:
         st.session_state["time"] = None
         st.session_state["messages"] = []
 
+#AI応答前のインターバル管理
+if "interval" not in st.session_state:
+    st.session_state["interval"] = None
+
 #5分経過の会話終了ダイアログを機能させるフラグのようなもの
 #0->5分経ったら表示させる
 #1->一度ダイアログ表示させたのでもう表示させない
@@ -65,6 +70,13 @@ def show_messages():
             ''', unsafe_allow_html=True)
         else:
             with st.chat_message(message["role"]):
+                #応答出力前のインターバル
+                if i == len(st.session_state["messages"]) - 1 and st.session_state["interval"] != None:
+                    elapsed = datetime.datetime.now(datetime.timezone.utc) - st.session_state["interval"]
+                    remaining = 5 - elapsed.total_seconds()
+                    if remaining > 0:
+                        with st.spinner(""):
+                            time.sleep(remaining)
                 st.markdown(f'''
                 <div style="max-width: 80%;" class="messages">{message["content"]}</div>
                 ''', unsafe_allow_html=True)
@@ -92,6 +104,7 @@ def generate_response():
     #最初の送信だったら、タイマー開始（最初のtimestampを控える）
     if st.session_state["time"] == None:
         st.session_state["time"] = ref.get()[0].to_dict()["timestamp"]
+    st.session_state["interval"] = datetime.datetime.now(datetime.timezone.utc)
     bot = ChatBot(llm, user_id = st.session_state["user_id"])
     response = bot.chat(st.session_state["messages"])
     output_message_data = {"role": "ai", "content": response, "timestamp": firestore.SERVER_TIMESTAMP}
