@@ -21,31 +21,15 @@ if not firebase_admin._apps:
 # Firestoreのインスタンスを取得
 db = firestore.client()
 
-# セッションステートの初期化
+#URLからuser_idを受け取る
 if "user_id" not in st.session_state:
-    #ログイン（実験参加者のid認証）
-    st.text("学籍番号と名前を入力して、開始ボタンを押してください。")
-    user_id = st.text_input("学籍番号")
-    user_name = st.text_input("名前")
-    r = True #開始ボタンは情報入力されないとdisabled
-    if user_id.isdigit() and user_name:
-        r = False
-        
-    with st.container(horizontal=True, horizontal_alignment="right"):
-        if st.button("開始", type="primary", disabled=r):
-            st.session_state["user_id"] = user_id
-            user_ref = db.collection("users2").document(st.session_state["user_id"])
-            user_doc = user_ref.get()
-            #nameをデータベースに保存
-            db.collection("users2").document(st.session_state["user_id"]).set({
-                "name": firestore.ArrayUnion([user_name])
-            }, merge=True)
-            st.rerun()
-    st.stop()
+    #クエリパラメータの読み込み
+    st.session_state["user_id"] = st.query_params["user_id"]
 
 #Firestoreのデータへのアクセス
-ref = db.collection("users2").document(st.session_state["user_id"]).collection("conversation").order_by("timestamp")
+ref = db.collection("users3_1").document(st.session_state["user_id"]).collection("conversation").order_by("timestamp")
 
+# セッションステートの初期化
 if "input" not in st.session_state:
     st.session_state["input"] = ""
 if "human_message" not in st.session_state:
@@ -87,7 +71,7 @@ def show_messages():
 
 
 #firestoreへの保存のためのアクセス
-add_ref = db.collection("users2").document(st.session_state["user_id"]).collection("conversation")
+add_ref = db.collection("users3_1").document(st.session_state["user_id"]).collection("conversation")
 #送信ボタンが押されたとき
 def send_message():
     if st.session_state["human_message"] != "":
@@ -192,14 +176,19 @@ with st._bottom:
     
     #まだ5分経っておらず、ダイアログが表示される前は、終了ボタンを表示しない。
     if st.session_state["dialog_finish"] == 0:
+        #最後のメッセージが人間だったら応答を生成する関数
+        if st.session_state["messages"][-1]["role"] == "human":
+            generate_response()
+            st.session_state["human_message"] = ""
+            st.rerun()
         st.stop()
     with finish_btn_col:
         if st.button("終了", type="primary", use_container_width=True, disabled=send_disabled):
             st.session_state["dialog_finish"] = 2
             st.rerun()
-
-    #最後のメッセージが人間だったら応答を生成する関数
-    if st.session_state["messages"][-1]["role"] == "human":
-        generate_response()
-        st.session_state["human_message"] = ""
-        st.rerun()
+        else:
+            #最後のメッセージが人間だったら応答を生成する関数
+            if st.session_state["messages"][-1]["role"] == "human":
+                generate_response()
+                st.session_state["human_message"] = ""
+                st.rerun()
