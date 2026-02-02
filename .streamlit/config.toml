@@ -1,0 +1,9 @@
+[theme]
+base="light"
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[ui]
+hideTopBar = true
