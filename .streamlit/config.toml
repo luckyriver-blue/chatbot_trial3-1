@@ -2,7 +2,7 @@
 base="light"
 
 [client]
-showErrorDetails = none
+showErrorDetails = "none"
 toolbarMode = "minimal"
 
 [ui]
