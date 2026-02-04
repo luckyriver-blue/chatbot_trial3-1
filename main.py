@@ -73,7 +73,7 @@ def show_messages():
                 #応答出力前のインターバル
                 if i == len(st.session_state["messages"]) - 1 and st.session_state["interval"] != None:
                     elapsed = datetime.datetime.now(datetime.timezone.utc) - st.session_state["interval"]
-                    remaining = 5 - elapsed.total_seconds()
+                    remaining = 10 - elapsed.total_seconds()
                     if remaining > 0:
                         with st.spinner(""):
                             time.sleep(remaining)
