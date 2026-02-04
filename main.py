@@ -69,14 +69,13 @@ def show_messages():
             </div>
             ''', unsafe_allow_html=True)
         else:
+            #応答出力前のインターバル
+            if i == len(st.session_state["messages"]) - 1 and st.session_state["interval"] != None:
+                elapsed = datetime.datetime.now(datetime.timezone.utc) - st.session_state["interval"]
+                remaining = 10 - elapsed.total_seconds()
+                if remaining > 0:
+                    time.sleep(remaining)
             with st.chat_message(message["role"]):
-                #応答出力前のインターバル
-                if i == len(st.session_state["messages"]) - 1 and st.session_state["interval"] != None:
-                    elapsed = datetime.datetime.now(datetime.timezone.utc) - st.session_state["interval"]
-                    remaining = 10 - elapsed.total_seconds()
-                    if remaining > 0:
-                        with st.spinner(""):
-                            time.sleep(remaining)
                 st.markdown(f'''
                 <div style="max-width: 80%;" class="messages">{message["content"]}</div>
                 ''', unsafe_allow_html=True)
@@ -93,6 +92,7 @@ def send_message():
 
 def add_human_message():
     #新しい入力を追加
+    st.session_state["interval"] = datetime.datetime.now(datetime.timezone.utc)
     input_message_data = {"role": "human", "content": st.session_state["human_message"], "timestamp": firestore.SERVER_TIMESTAMP}
     st.session_state["messages"].append(input_message_data)
 
@@ -104,7 +104,6 @@ def generate_response():
     #最初の送信だったら、タイマー開始（最初のtimestampを控える）
     if st.session_state["time"] == None:
         st.session_state["time"] = ref.get()[0].to_dict()["timestamp"]
-    st.session_state["interval"] = datetime.datetime.now(datetime.timezone.utc)
     bot = ChatBot(llm)
     response = bot.chat(st.session_state["messages"])
     output_message_data = {"role": "ai", "content": response, "timestamp": firestore.SERVER_TIMESTAMP}
