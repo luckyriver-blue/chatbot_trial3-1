@@ -141,7 +141,7 @@ if st.session_state["messages"] == [] or st.session_state["messages"][0]["role"]
 #会話終了後
 if st.session_state["dialog_finish"] == 2:
     st.markdown(
-                f'<br>会話は終了しました。<br><a href="https://nagoyapsychology.qualtrics.com/jfe/form/SV_es86xaTv17rIado/?condition=1" target="_self">こちら</a>をクリックしてアンケートを進めてください。',
+                f'<br>会話は終了しました。<br><a href="https://nagoyapsychology.qualtrics.com/jfe/form/SV_es86xaTv17rIado?Q_R={st.session_state["user_id"]}&condition=1" target="_self">こちら</a>をクリックしてアンケートを進めてください。',
                 unsafe_allow_html=True
     )
     if st.session_state["human_message"].strip() != "":
